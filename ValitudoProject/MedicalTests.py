@@ -22,4 +22,4 @@ class PatientMedicalHistory:
     
     def printMedicalHistory(self):
         pass
-        
+
