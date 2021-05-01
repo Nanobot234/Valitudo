@@ -12,15 +12,17 @@ import pandas as pd
 
 
 class Database:
-    def __init__(self,db_name):
-        self.db_name = db_name
-        self.connection = sqlite3.connect(self.db_name)
+    def __init__(self):
+        
+        self.connection = sqlite3.connect("Valitudo.db")
         self.connection.execute("PRAGMA foreign_keys = 1")
         con = self.connection.cursor()
     #connection = sqlite3.connect(':memory:')
 
-        con.execute("""CREATE TABLE Patient(
+        con.execute("""CREATE TABLE if not exists Patient(
               id integer PRIMARY KEY UNIQUE,
+            FOREIGN KEY (doctor_id) REFERENCES Doctor(id)
+            FORIEGN KEY (pharmacist_id) REFERENCES Pharmacist(id)
               firstName text NOT NULL,
                lastName text NOT NULL,
                DateOfBirth text NOT NULL,
@@ -29,6 +31,7 @@ class Database:
                address text NOT NULL
         )""")
 
+#Add attribute to patient that is docID
         con.execute("""CREATE TABLE if not exists Doctor (
               id integer PRIMARY KEY UNIQUE,
               firstName text NOT NULL,
@@ -58,7 +61,7 @@ class Database:
             FOREIGN KEY (patient_id) REFERENCES patient(id),
             FOREIGN KEY (doc_id) REFERENCES Doctor(id)
             )""")
-
+    
 
         con.execute("""CREATE TABLE if not exists HereditaryIllness(
                     patient_id integer,
@@ -78,9 +81,7 @@ class Database:
                     FOREIGN KEY (patient_id) REFERENCES patient(id)
 
             )""")
-        #Notes
-        #Create a table for active illnes. immunizations, other elements of Medical History
-        #Patient table 
+        
         con.execute("""CREATE TABLE if not exists Appointments (
                 patient_id integer,
                 doc_id INTEGER,
@@ -109,6 +110,12 @@ class Database:
         con = self.connection.cursor()
         with self.connection:
             con.execute("SELECT * from Patient WHERE id = ?",(patient.PatientId,))
+            return con.fetchall()
+
+    def findPatientOnlyID(self,idNum):
+        con = self.connection.cursor()
+        with self.connection:
+            con.execute("SELECT * from Patient WHERE id = ?",(idNum,))
             return con.fetchall()
 
     def updatePatientAddress(self,patient,newAddress):
@@ -149,6 +156,12 @@ class Database:
         with self.connection:
             con.execute("SELECT * from Doctor WHERE id = ?",(doctor.DoctorId,))
             return con.fetchall()
+
+    def findDoctorWithSpecificID(self,docid):
+        con = self.connection.cursor()
+        with self.connection:
+            con.execute("SELECT * from Doctor WHERE id = ?",(docid,))
+            return con.fetchall()
     
     def updateDoctorOfficeNum(self,doctor,newOfficeNum):
         con = self.connection.cursor()
@@ -164,6 +177,12 @@ class Database:
         con = self.connection.cursor()
         with self.connection:
             con.execute("SELECT * FROM Doctor ")
+            return con.fetchall()
+
+    def deleteDoctorbyID(self,doctor):
+        con = self.connection.cursor()
+        with self.connection:
+            con.execute("DELETE FROM Doctor WHERE id = ?",(doctor.DoctorId,))
             return con.fetchall()
    
     def printAllDoctors(self):
@@ -217,6 +236,11 @@ class Database:
          with self.connection:
             con.execute("INSERT INTO Appointments VALUES (?,?,?,?,?)",(patient.PatientId,doctor.DoctorId,appointment.date,appointment.time,appointment.AppointmentPurpose))
 
+    def insertnewAppointWithValues(self,patientID,doctorID,date,time,purpose):
+        con = self.connection.cursor()
+        with self.connection:
+            con.execute("INSERT INTO Appointments VALUES (?,?,?,?,?)",(patientID,doctorID,date,time,purpose))
+    
     def chnageAppointment(self,newAppointmentDate,newAppointmentTime,patient):
           con = self.connection.cursor()
           with self.connection:
@@ -240,6 +264,11 @@ class Database:
        with self.connection:
              print(pd.read_sql_query("SELECT * FROM Appointments",self.connection))
 
+    def deleteAllAppintments(self):
+        con = self.connection.cursor()
+        with self.connection:
+             con.execute("DELETE FROM Appointments")
+             
 
     def insertRecordIntoMedicalTest(self,medTest,patient,doctor):
     # the with is a context manager so you dont have to keep commiting
@@ -350,6 +379,7 @@ class Database:
          with self.connection:
              print(pd.read_sql_query("SELECT * FROM HereditaryIllness",self.connection))
 
+    '''Generate a random 10 digit int to be used for id '''
     def generateRandomId(self):
         val = uuid.uuid4().int
         trim = str(val)[:10]
