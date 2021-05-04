@@ -8,10 +8,12 @@ from DataClasses import Doctor
 from DataClasses import Pharmacist
 from DataClasses import *
 import pandas as pd 
+import os
 
 
 
 class Database:
+    
     def __init__(self):
         
         self.connection = sqlite3.connect("Valitudo.db")
@@ -21,14 +23,16 @@ class Database:
 
         con.execute("""CREATE TABLE if not exists Patient(
               id integer PRIMARY KEY UNIQUE,
-            FOREIGN KEY (doctor_id) REFERENCES Doctor(id)
-            FORIEGN KEY (pharmacist_id) REFERENCES Pharmacist(id)
               firstName text NOT NULL,
                lastName text NOT NULL,
                DateOfBirth text NOT NULL,
                age integer NOT NULL,
                gender text NOT NULL,
-               address text NOT NULL
+               address text NOT NULL,
+               doctor_id integer,
+               pharmacist_id integer,
+               FOREIGN KEY (doctor_id) REFERENCES Doctor(id),
+               FOREIGN KEY (pharmacist_id) REFERENCES Pharmacist(id)
         )""")
 
 #Add attribute to patient that is docID
@@ -102,10 +106,15 @@ class Database:
         )""")
 
        ##Patient Class
-    def insertNewPatient(self,patient):
+    def insertNewPatient(self,patient,doctor,pharmacist):
         con = self.connection.cursor()
         with self.connection:
-            con.execute("INSERT INTO Patient VALUES (?,?,?,?,?,?,?)",(patient.PatientId,patient.firstName,patient.lastName,patient.DateOfBirth,patient.age,patient.gender,patient.address))
+            con.execute("INSERT INTO Patient VALUES (?,?,?,?,?,?,?,?,?)",(patient.PatientId,patient.firstName,patient.lastName,patient.DateOfBirth,patient.age,patient.gender,patient.address,doctor.DoctorId,pharmacist.PharmacistId))
+
+    def insertNewPatientWithOnlyOtherIDs(self,patient,docId,pharmacistId):
+         con = self.connection.cursor()
+         with self.connection:
+            con.execute("INSERT INTO Patient VALUES (?,?,?,?,?,?,?,?,?)",(patient.PatientId,patient.firstName,patient.lastName,patient.DateOfBirth,patient.age,patient.gender,patient.address,docId,pharmacistId))
     def findPatientbyID(self,patient):
         con = self.connection.cursor()
         with self.connection:
@@ -136,7 +145,7 @@ class Database:
     def getAllPatients(self):
         con = self.connection.cursor()
         with self.connection:
-            con.execute("SELECT *  FROM Patient ")
+            con.execute("SELECT * FROM Patient ")
             return con.fetchall()
 
     def printAllPatients(self):
@@ -386,4 +395,6 @@ class Database:
         intTrim = int(trim)
         return intTrim
   
+    def deleteDataBase(self):
+        os.remove("/Users/nanabonsu/Desktop/Valitudo/ValitudoProject/Valitudo.db")
 
