@@ -31,8 +31,7 @@ class Database:
                address text NOT NULL,
                doctor_id integer,
                pharmacist_id integer,
-               FOREIGN KEY (doctor_id) REFERENCES Doctor(id),
-               FOREIGN KEY (pharmacist_id) REFERENCES Pharmacist(id)
+               FOREIGN KEY (doctor_id) REFERENCES Doctor(id)
         )""")
 
 #Add attribute to patient that is docID
@@ -61,7 +60,7 @@ class Database:
             patient_id integer,
             date text NOT NULL,
             time text NOT NULL,
-            description text NOT NULL UNIQUE,
+            description text NOT NULL,
             FOREIGN KEY (patient_id) REFERENCES patient(id),
             FOREIGN KEY (doc_id) REFERENCES Doctor(id)
             )""")
@@ -98,11 +97,11 @@ class Database:
     
         con.execute("""CREATE TABLE if not exists PrescribedMedicine (
                 patient_id integer NOT NULL,
-                doc_id INTEGER,
+                doc_id integer,
                 medicationName text NOT NULL,
                 datePrescribed text NOT NULL,
-                FOREIGN KEY (doc_id) REFERENCES Doctor(id),
-                FOREIGN KEY (patient_id) REFERENCES Patient(id)         
+                FOREIGN KEY (patient_id) REFERENCES Patient(id),
+                FOREIGN KEY (doc_id) REFERENCES Doctor(id)       
         )""")
 
        ##Patient Class
@@ -127,15 +126,26 @@ class Database:
             con.execute("SELECT * from Patient WHERE id = ?",(idNum,))
             return con.fetchall()
 
+    def findAssignedPatientbyDocID(self,docID):
+        con = self.connection.cursor()
+        with self.connection:
+            con.execute("SELECT * from Patient WHERE doctor_id = ?",(docID,))
+            return con.fetchall()
+        
     def updatePatientAddress(self,patient,newAddress):
         con = self.connection.cursor()
         with self.connection:
                 con.execute("UPDATE Patient SET address = ? WHERE id = ?",(newAddress,patient.PatientId))
 
-    def updatePatientAge(self,patient,newAge):
+    def updatePatientAddressByID(self,newAddress,PatientId):
+         con = self.connection.cursor()
+         with self.connection:
+              con.execute("UPDATE Patient SET address = ? WHERE id = ?",(newAddress,PatientId))
+
+    def updatePatientAgeByID(self,newAge,PatientId):
         con = self.connection.cursor()
         with self.connection:
-                con.execute("UPDATE Patient SET age = ? WHERE id = ?",(newAge,patient.PatientId))
+                con.execute("UPDATE Patient SET age = ? WHERE id = ?",(newAge,PatientId))
     
     def deletePatient(self,patient):
         con = self.connection.cursor()
@@ -259,7 +269,13 @@ class Database:
     def getPatientAppointments(self,patient):
          con = self.connection.cursor()
          with self.connection:
-            con.execute("SELECT * FROM Appointments WHERE id = ?",(patient.PatientId,))
+            con.execute("SELECT * FROM Appointments WHERE patient_id = ?",(patient.PatientId,))
+            return con.fetchall()
+    
+    def getPatientAppointmentsByID(self,patientID):
+         con = self.connection.cursor()
+         with self.connection:
+            con.execute("SELECT * FROM Appointments WHERE patient_id = ?",(patientID,))
             return con.fetchall()
 
     def getAllAppointments(self):
@@ -326,6 +342,11 @@ class Database:
        with self.connection:
             con.execute("INSERT INTO PrescribedMedicine VALUES (?,?,?,?)",(patient.PatientId,doctor.DoctorId,medicine.MedicationName,medicine.datePrescribed))
     
+    def insertPrescribedMedicinefromValues(self,patientID,doctorID,MedicationName,dataPrescribed):
+         con = self.connection.cursor()
+         with self.connection:
+            con.execute("INSERT INTO PrescribedMedicine VALUES (?,?,?,?)",(patientID,doctorID,MedicationName,dataPrescribed))
+            
     def deletePrescribedMedicineforPatient(self,patient):
          con = self.connection.cursor()
          with self.connection:
@@ -342,6 +363,13 @@ class Database:
         with self.connection:
             con.execute("SELECT * from PrescribedMedicine WHERE patient_Id = ?",(patient.PatientId,))
             return con.fetchall()
+
+    def getMedicinesofPatientByID(self,patientID):
+        con = self.connection.cursor()
+        with self.connection:
+            con.execute("SELECT * from PrescribedMedicine WHERE patient_id = ?",(patientID,))
+            return con.fetchall()
+
 
     def getAllMedicinesofDoctor(self,doctor):
         con = self.connection.cursor()
@@ -388,6 +416,18 @@ class Database:
          with self.connection:
              print(pd.read_sql_query("SELECT * FROM HereditaryIllness",self.connection))
 
+    def getSumOfPatients(self):
+         con = self.connection.cursor()
+         with self.connection:
+            con.execute("SELECT COUNT(*) FROM Patient")
+            return con.fetchone()
+
+    def getSumfDoctors(self):
+        con = self.connection.cursor()
+        with self.connection:
+            con.execute("SELECT COUNT(*) FROM Doctor")
+            return con.fetchone()
+
     '''Generate a random 10 digit int to be used for id '''
     def generateRandomId(self):
         val = uuid.uuid4().int
@@ -396,5 +436,5 @@ class Database:
         return intTrim
   
     def deleteDataBase(self):
-        os.remove("/Users/nanabonsu/Desktop/Valitudo/ValitudoProject/Valitudo.db")
+        os.remove("./Valitudo.db")
 
