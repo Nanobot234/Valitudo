@@ -56,11 +56,8 @@ class StartPage(tk.Frame):
     def __init__(self, parent, controller,pages):
         tk.Frame.__init__(self,parent)
 
-        self.patientImage = Image.open("/Users/nanabonsu/Desktop/Valitudo/ValitudoProject/patientLogin.png")
-        newImg = tk.PhotoImage("/Users/nanabonsu/Desktop/Valitudo/ValitudoProject/patientLogin.png")
         
         self.patientLogo = tk.Canvas(self,width=800,height=800)
-        self.patientLogo.create_image(0,50,image=newImg)
         self.patientLogo.place(anchor='nw', relx='0.06', rely='0.15', x='0', y='0')
         self.doctorLogo = tk.Canvas(self)
         self.doctorLogo.place(anchor='nw', relx='0.56', rely='0.15', x='0', y='0')
@@ -826,7 +823,7 @@ class PatientView(tk.Frame):
         self.PrescribedMedicineValue = tk.StringVar()
         self.PrecribedMedicineInfo = tk.Label(self,textvariable=self.PrescribedMedicineValue)
         self.PrecribedMedicineInfo.place(anchor='nw', relx='0.78', rely='0.53', x='0', y='0')
-        self.LogoutButton = tk.Button(self)
+        self.LogoutButton = tk.Button(self,command=lambda:controller.show_frame(StartPage))
         self.LogoutButton.configure(text='Log Out')
         self.LogoutButton.place(anchor='nw', relheight='0.06', relwidth='0.2', relx='0.43', rely='0.9', x='0', y='0')
         
